@@ -14,6 +14,7 @@ Systeme Multi-Agents de coordination des urgences medicales, developpe avec **SP
 ## Description
 
 Simulation d un systeme de coordination d urgences medicales en Algerie impliquant **10 agents autonomes** qui communiquent via XMPP. Le systeme couvre le cycle complet : appel d urgence -> dispatch -> reponse medicale -> securisation -> hospitalisation -> notification famille.
+<img width="3455" height="1787" alt="image" src="https://github.com/user-attachments/assets/0151b98d-6dd9-4364-912d-44de407e5394" />
 
 ## Les 10 Agents
 
