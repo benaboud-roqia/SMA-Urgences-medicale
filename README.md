@@ -6,10 +6,10 @@ Systeme Multi-Agents de coordination des urgences medicales, developpe avec **SP
 
 | Nom | Role |
 |-----|------|
-| BENABOUD ROQIA | Developpement principal, architecture MAS, dashboard web |
-| GAGAA IMANE | Agents de coordination et FSM |
-| GASMI CHAIMA | Agents medicaux (Doctor, BloodBank, Hospital) |
-| ROUABEH NIAMAT-ALLAH | Agents securite et famille (Police, FireBrigade, Family) |
+| BENABOUD ROQIA | AI&SD |
+| GAGAA IMANE | AI&SD |
+| GASMI CHAIMA |AI&SD |
+| ROUABEH NIAMAT-ALLAH |AI&SD|
 
 ## Description
 
