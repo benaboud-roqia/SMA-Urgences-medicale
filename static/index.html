@@ -1,0 +1,399 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SMA Urgences Medicales - Algerie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Share Tech Mono',monospace;background:#050d1a;color:#a8d8ea;min-height:100vh}
+    header{background:linear-gradient(180deg,#071428,#050d1a);border-bottom:1px solid rgba(0,229,255,.15);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    header h1{font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:#e0f7ff;text-shadow:0 0 12px rgba(0,229,255,.5);letter-spacing:2px}
+    header h1 em{color:#ff2d55;font-style:normal}
+    #badge{padding:4px 14px;border-radius:4px;font-size:.72rem;font-weight:600;background:#071428;border:1px solid #1e3a5f;color:#4a7fa5;letter-spacing:1px;text-transform:uppercase}
+    #badge.running{border-color:#00ff88;color:#00ff88;box-shadow:0 0 8px rgba(0,255,136,.3);background:#001a0d}
+    #badge.stopped{border-color:#ff2d55;color:#ff2d55;box-shadow:0 0 8px rgba(255,45,85,.3);background:#1a0008}
+    .grid{display:grid;grid-template-columns:210px 1fr 255px;height:calc(100vh - 53px)}
+    .left{background:#071428;border-right:1px solid rgba(0,229,255,.12);overflow-y:auto;padding:10px}
+    .left h2,.right h2{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#00e5ff;margin-bottom:7px;text-shadow:0 0 6px rgba(0,229,255,.4)}
+    .acard{background:#071e38;border:1px solid #0e3a6a;border-radius:4px;padding:7px 9px;margin-bottom:5px;transition:all .3s}
+    .acard.active{border-color:#00e5ff;background:#002a40;box-shadow:0 0 10px rgba(0,229,255,.25)}
+    .acard.success{border-color:#00ff88;background:#001a14;box-shadow:0 0 8px rgba(0,255,136,.2)}
+    .aname{font-size:.75rem;font-weight:600;display:flex;align-items:center;gap:6px;color:#c8eeff}
+    .astatus{font-size:.62rem;color:#3a6a8a;margin-top:2px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#1e3a5f;display:inline-block;flex-shrink:0}
+    .dot.on{background:#00ff88;box-shadow:0 0 6px #00ff88}
+    .dot.act{background:#00e5ff;box-shadow:0 0 8px #00e5ff;animation:blink .8s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+    .center{display:flex;flex-direction:column;background:#050d1a;overflow:hidden}
+    .toolbar{padding:7px 12px;border-bottom:1px solid rgba(0,229,255,.12);background:#071428;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap}
+    .toolbar h2{flex:1;font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:#00e5ff}
+    button{padding:4px 11px;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:.7rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:box-shadow .2s}
+    #btn-start{background:#001a0d;border:1px solid #00ff88;color:#00ff88}
+    #btn-start:hover{box-shadow:0 0 10px rgba(0,255,136,.4)}
+    #btn-stop{background:#1a0008;border:1px solid #ff2d55;color:#ff2d55}
+    #btn-stop:hover{box-shadow:0 0 10px rgba(255,45,85,.4)}
+    #btn-clear{background:#071428;border:1px solid #1e3a5f;color:#4a7fa5}
+    .tab-bar{display:flex;gap:0;border-bottom:1px solid rgba(0,229,255,.12);background:#071428;flex-shrink:0}
+    .tab{padding:6px 14px;font-size:.65rem;text-transform:uppercase;letter-spacing:1px;cursor:pointer;color:#3a6a8a;border-bottom:2px solid transparent;transition:all .2s}
+    .tab.active{color:#00e5ff;border-bottom-color:#00e5ff;background:#050d1a}
+    .tab-content{display:none;flex:1;overflow-y:auto}
+    .tab-content.active{display:flex;flex-direction:column}
+    #flow-panel{flex-shrink:0;background:#060f1e;border-bottom:1px solid rgba(0,229,255,.12);padding:9px 12px}
+    #flow-panel h3{font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:#00e5ff;margin-bottom:7px}
+    .flow-chain{display:flex;align-items:center;flex-wrap:wrap;gap:0;min-height:36px}
+    .flow-node{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:48px}
+    .flow-icon{font-size:1.2rem;filter:grayscale(1) brightness(.4);transition:filter .4s,transform .3s}
+    .flow-icon.lit{filter:grayscale(0) brightness(1.2) drop-shadow(0 0 6px currentColor);transform:scale(1.15)}
+    .flow-label{font-size:.5rem;color:#1e3a5f;transition:color .4s}
+    .flow-label.lit{color:#00e5ff}
+    .flow-arrow{display:flex;flex-direction:column;align-items:center;gap:1px;margin:0 1px}
+    .arrow-msg{font-size:.45rem;color:#1e3a5f;white-space:nowrap;transition:color .4s,text-shadow .4s}
+    .arrow-msg.lit{color:#ffd60a;text-shadow:0 0 6px rgba(255,214,10,.5)}
+    .arrow-line{width:24px;height:2px;background:#1e3a5f;border-radius:1px;position:relative;overflow:hidden;transition:background .4s}
+    .arrow-line.lit{background:#00e5ff;box-shadow:0 0 4px #00e5ff}
+    .arrow-line.lit::after{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,#fff,transparent);animation:slide .6s linear}
+    @keyframes slide{to{left:200%}}
+    .arrow-head{font-size:.65rem;color:#1e3a5f;line-height:1;transition:color .4s}
+    .arrow-head.lit{color:#00e5ff}
+    #logs{flex:1;overflow-y:auto;padding:8px 12px;font-size:.73rem;line-height:1.75}
+    .ll{padding:1px 0;border-bottom:1px solid #071428;white-space:pre-wrap;word-break:break-word}
+    .ll.emergency{color:#ff2d55}.ll.coordinator{color:#00e5ff}.ll.ambulance{color:#ffd60a}
+    .ll.hospital{color:#5ac8fa}.ll.doctor{color:#00ff88}.ll.police{color:#bf5af2}
+    .ll.fire{color:#ff9f0a}.ll.helicopter{color:#64d2ff}.ll.blood{color:#ff453a}
+    .ll.family{color:#ff6b35}.ll.sys{color:#3a6a8a;font-style:italic}
+    #history-panel{flex:1;overflow-y:auto;padding:10px 12px}
+    .hcard{background:#071e38;border:1px solid #0e3a6a;border-radius:5px;padding:10px 12px;margin-bottom:8px;font-size:.7rem}
+    .hcard.resolved{border-left:3px solid #00ff88}
+    .hcard.pending{border-left:3px solid #ffd60a}
+    .hcard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .hcard-id{font-family:'Orbitron',monospace;font-size:.75rem;color:#c8eeff;font-weight:700}
+    .hcard-time{font-size:.6rem;color:#3a6a8a}
+    .hcard-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:3px}
+    .hcard-label{color:#3a6a8a;font-size:.62rem}
+    .hcard-val{color:#a8d8ea}
+    .hcard-hospital{color:#5ac8fa;font-size:.65rem;margin-top:4px}
+    .hcard-contact{color:#ff6b35;font-size:.62rem}
+    .hcard-numero{color:#00ff88;font-size:.62rem}
+    .hempty{color:#1e3a5f;font-size:.75rem;text-align:center;padding:30px;font-style:italic}
+    .right{background:#071428;border-left:1px solid rgba(0,229,255,.12);overflow-y:auto;padding:10px}
+    .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px}
+    .scard{background:#071e38;border:1px solid #0e3a6a;border-radius:4px;padding:8px;text-align:center}
+    .sval{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:700;line-height:1;color:#00e5ff;text-shadow:0 0 10px rgba(0,229,255,.4)}
+    .slbl{font-size:.58rem;color:#3a6a8a;margin-top:3px;text-transform:uppercase;letter-spacing:1px}
+    .fsm-box{background:#071e38;border:1px solid #0e3a6a;border-radius:4px;padding:8px;margin-bottom:8px}
+    .fsm-box h3{font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:#00e5ff;margin-bottom:5px}
+    .fstep{font-size:.68rem;padding:3px 6px;border-radius:3px;color:#1e3a5f;margin-bottom:3px;letter-spacing:1px}
+    .fstep.done{color:#00ff88;background:#001a0d}
+    .fstep.current{color:#00e5ff;background:#002a40;font-weight:700;box-shadow:0 0 6px rgba(0,229,255,.2)}
+    .numbox{background:#071e38;border:1px solid #0e3a6a;border-radius:4px;padding:8px;margin-bottom:8px}
+    .numbox h3{font-size:.58rem;text-transform:uppercase;letter-spacing:2px;color:#00e5ff;margin-bottom:6px}
+    .nrow{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #0a1f3a;font-size:.65rem}
+    .nrow:last-child{border-bottom:none}
+    .nlabel{color:#4a7fa5}.nval{color:#00ff88;font-weight:700}
+    .CRITICAL{color:#ff2d55;text-shadow:0 0 6px rgba(255,45,85,.4)}.HIGH{color:#ff9f0a}.MEDIUM{color:#ffd60a}.LOW{color:#00ff88}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#050d1a}::-webkit-scrollbar-thumb{background:#0e3a6a;border-radius:2px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>&#x1F6A8; SMA <em>Urgences Medicales</em> &mdash; Algerie</h1>
+  <span id="badge">Arrete</span>
+</header>
+<div class="grid">
+  <div class="left">
+    <h2>Agents (10)</h2>
+    <div id="agents"></div>
+  </div>
+  <div class="center">
+    <div class="toolbar">
+      <h2>Dashboard</h2>
+      <button id="btn-start" onclick="startSim()">Demarrer</button>
+      <button id="btn-stop" onclick="stopSim()">Arreter</button>
+      <button id="btn-clear" onclick="clearLogs()">Vider</button>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('logs-tab',this)">Logs temps reel</div>
+      <div class="tab" onclick="switchTab('history-tab',this)">Historique</div>
+    </div>
+    <div id="logs-tab" class="tab-content active">
+      <div id="flow-panel">
+        <h3>Flux de messages inter-agents</h3>
+        <div class="flow-chain" id="flow-chain"></div>
+      </div>
+      <div id="logs"></div>
+    </div>
+    <div id="history-tab" class="tab-content">
+      <div id="history-panel">
+        <div class="hempty" id="hempty">Aucun appel enregistre. Demarrez la simulation.</div>
+      </div>
+    </div>
+  </div>
+  <div class="right">
+    <h2>Statistiques</h2>
+    <div class="sgrid">
+      <div class="scard"><div class="sval" id="s-total">0</div><div class="slbl">Appels</div></div>
+      <div class="scard"><div class="sval" style="color:#00ff88" id="s-resolved">0</div><div class="slbl">Resolus</div></div>
+      <div class="scard"><div class="sval" style="color:#ff2d55" id="s-critical">0</div><div class="slbl">CRITICAL</div></div>
+      <div class="scard"><div class="sval" style="color:#ffd60a" id="s-heli">0</div><div class="slbl">Helicos</div></div>
+    </div>
+    <div class="fsm-box"><h3>Etat FSM</h3><div id="fsm"></div></div>
+    <div class="numbox">
+      <h3>Numeros urgence Algerie</h3>
+      <div class="nrow"><span class="nlabel">SAMU National</span><span class="nval">115</span></div>
+      <div class="nrow"><span class="nlabel">Police</span><span class="nval">17</span></div>
+      <div class="nrow"><span class="nlabel">Pompiers / Prot. Civile</span><span class="nval">14</span></div>
+      <div class="nrow"><span class="nlabel">Gendarmerie</span><span class="nval">1055</span></div>
+      <div class="nrow"><span class="nlabel">SAMU Alger</span><span class="nval">021-23-50-50</span></div>
+      <div class="nrow"><span class="nlabel">SAMU Oran</span><span class="nval">041-33-15-15</span></div>
+      <div class="nrow"><span class="nlabel">SAMU Constantine</span><span class="nval">031-92-50-50</span></div>
+      <div class="nrow"><span class="nlabel">CHU Mustapha Alger</span><span class="nval">021-23-53-53</span></div>
+      <div class="nrow"><span class="nlabel">EHU Oran</span><span class="nval">041-41-27-27</span></div>
+    </div>
+    <h2>Derniers appels</h2>
+    <div id="calls"></div>
+  </div>
+</div>
+<script>
+const AGENTS=[
+  {id:"emergency",   icon:"&#x1F6A8;", name:"EmergencyAgent"},
+  {id:"coordinator", icon:"&#x1F3AF;", name:"CoordinatorAgent"},
+  {id:"ambulance",   icon:"&#x1F691;", name:"AmbulanceAgent"},
+  {id:"hospital",    icon:"&#x1F3E5;", name:"HospitalAgent"},
+  {id:"doctor",      icon:"&#x1FA7A;", name:"DoctorAgent"},
+  {id:"police",      icon:"&#x1F694;", name:"PoliceAgent"},
+  {id:"firebrigade", icon:"&#x1F692;", name:"FireBrigadeAgent"},
+  {id:"helicopter",  icon:"&#x1F681;", name:"HelicopterAgent"},
+  {id:"bloodbank",   icon:"&#x1FA78;", name:"BloodBankAgent"},
+  {id:"family",      icon:"&#x1F46A;", name:"FamilyAgent"}
+];
+const FSM=["IDLE","DISPATCHING","MEDICAL_RESPONSE","SECURING","PREPARING","RESOLVING"];
+const FLOW=[
+  {type:"node",id:"emergency",icon:"&#x1F6A8;",label:"Emergency"},
+  {type:"arrow",msg:"emergency_call"},
+  {type:"node",id:"coordinator",icon:"&#x1F3AF;",label:"Coordinator"},
+  {type:"arrow",msg:"dispatch_order"},
+  {type:"node",id:"ambulance",icon:"&#x1F691;",label:"Ambulance"},
+  {type:"arrow",msg:"confirm"},
+  {type:"node",id:"coordinator2",icon:"&#x1F3AF;",label:"Coordinator"},
+  {type:"arrow",msg:"medical_req"},
+  {type:"node",id:"doctor",icon:"&#x1FA7A;",label:"Doctor"},
+  {type:"arrow",msg:"blood_req"},
+  {type:"node",id:"bloodbank",icon:"&#x1FA78;",label:"BloodBank"},
+  {type:"arrow",msg:"secure_zone"},
+  {type:"node",id:"police",icon:"&#x1F694;",label:"Police"},
+  {type:"arrow",msg:"prepare_req"},
+  {type:"node",id:"hospital",icon:"&#x1F3E5;",label:"Hospital"},
+  {type:"arrow",msg:"family_notify"},
+  {type:"node",id:"family",icon:"&#x1F46A;",label:"Family"},
+  {type:"arrow",msg:"resolution"},
+  {type:"node",id:"emergency2",icon:"&#x1F6A8;",label:"Emergency"}
+];
+
+// Build agents
+const agDiv=document.getElementById("agents");
+AGENTS.forEach(a=>{agDiv.innerHTML+=`<div class="acard" id="c-${a.id}"><div class="aname"><span class="dot" id="d-${a.id}"></span>${a.icon} ${a.name}</div><div class="astatus" id="st-${a.id}">${a.id}@localhost</div></div>`;});
+
+// Build FSM
+const fmDiv=document.getElementById("fsm");
+FSM.forEach(s=>{fmDiv.innerHTML+=`<div class="fstep" id="f-${s}">${s}</div>`;});
+
+// Build flow
+const chainDiv=document.getElementById("flow-chain");
+FLOW.forEach((f,i)=>{
+  if(f.type==="node") chainDiv.innerHTML+=`<div class="flow-node"><span class="flow-icon" id="fi-${i}">${f.icon}</span><span class="flow-label" id="fl-${i}">${f.label}</span></div>`;
+  else chainDiv.innerHTML+=`<div class="flow-arrow"><span class="arrow-msg" id="am-${i}">${f.msg}</span><div style="display:flex;align-items:center"><div class="arrow-line" id="al-${i}"></div><span class="arrow-head" id="ah-${i}">&#9658;</span></div></div>`;
+});
+
+function litFlow(idx,dur=1800){
+  if(!FLOW[idx])return;
+  if(FLOW[idx].type==="node"){
+    ["fi-","fl-"].forEach(p=>{const e=document.getElementById(p+idx);if(e){e.classList.add("lit");setTimeout(()=>e.classList.remove("lit"),dur);}});
+  } else {
+    ["am-","al-","ah-"].forEach(p=>{const e=document.getElementById(p+idx);if(e){e.classList.add("lit");setTimeout(()=>e.classList.remove("lit"),dur);}});
+  }
+}
+function animateStep(ni){litFlow(ni,2000);setTimeout(()=>litFlow(ni+1,1500),200);setTimeout(()=>litFlow(ni+2,2000),700);}
+
+let stats={total:0,resolved:0,critical:0,heli:0},calls=[],history=[],es=null;
+
+function switchTab(id,el){
+  document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  el.classList.add("active");
+}
+
+function setAgent(id,txt,mode="act"){
+  const c=document.getElementById("c-"+id),d=document.getElementById("d-"+id),s=document.getElementById("st-"+id);
+  if(!c)return;
+  c.className="acard active";d.className="dot "+mode;
+  if(txt)s.textContent=txt;
+  if(mode==="act")setTimeout(()=>{c.className="acard success";d.className="dot on";},2200);
+}
+
+function updateFSM(state){
+  const idx=FSM.indexOf(state);
+  FSM.forEach((s,i)=>{
+    const el=document.getElementById("f-"+s);if(!el)return;
+    if(i<idx){el.className="fstep done";el.textContent="OK "+s;}
+    else if(i===idx){el.className="fstep current";el.textContent="> "+s;}
+    else{el.className="fstep";el.textContent=s;}
+  });
+}
+
+function addCall(id,type,sev,loc){
+  calls.unshift({id,type,sev,loc,state:"En cours",time:new Date().toLocaleTimeString("fr-DZ"),hospital:"",contact:"",numero:""});
+  if(calls.length>6)calls.pop();
+  renderCalls();
+  // Add to history
+  history.unshift({id,type,sev,loc,state:"En cours",time:new Date().toLocaleTimeString("fr-DZ"),date:new Date().toLocaleDateString("fr-DZ"),hospital:"",contact:"",numero:""});
+  renderHistory();
+}
+
+function resolveCall(id){
+  const c=calls.find(x=>x.id===id);if(c)c.state="Resolu";renderCalls();
+  const h=history.find(x=>x.id===id);if(h)h.state="Resolu";renderHistory();
+}
+
+function updateCallData(id,field,val){
+  const c=calls.find(x=>x.id===id);if(c)c[field]=val;
+  const h=history.find(x=>x.id===id);if(h)h[field]=val;
+  renderCalls();renderHistory();
+}
+
+function renderCalls(){
+  document.getElementById("calls").innerHTML=calls.map(c=>
+    `<div class="citem"><div class="cid">${c.id} <span class="${c.sev}">[${c.sev}]</span></div><div class="cmeta">${c.type} - ${c.loc}</div><div class="cmeta">${c.state}</div></div>`
+  ).join("");
+}
+
+function renderHistory(){
+  const panel=document.getElementById("history-panel");
+  const empty=document.getElementById("hempty");
+  if(history.length===0){if(empty)empty.style.display="block";return;}
+  if(empty)empty.style.display="none";
+  panel.innerHTML=history.map(h=>`
+    <div class="hcard ${h.state==="Resolu"?"resolved":"pending"}">
+      <div class="hcard-header">
+        <span class="hcard-id">${h.id}</span>
+        <span class="hcard-time">${h.date} ${h.time}</span>
+      </div>
+      <div class="hcard-row">
+        <span><span class="hcard-label">Type: </span><span class="hcard-val">${h.type}</span></span>
+        <span><span class="hcard-label">Severite: </span><span class="${h.sev}">${h.sev}</span></span>
+        <span><span class="hcard-label">Statut: </span><span class="hcard-val" style="${h.state==="Resolu"?"color:#00ff88":"color:#ffd60a"}">${h.state}</span></span>
+      </div>
+      <div class="hcard-row"><span class="hcard-label">Lieu: </span><span class="hcard-val">${h.loc}</span></div>
+      ${h.hospital?`<div class="hcard-hospital">&#x1F3E5; ${h.hospital}</div>`:""}
+      ${h.contact?`<div class="hcard-contact">&#x1F4F1; Famille: ${h.contact}</div>`:""}
+      ${h.numero?`<div class="hcard-numero">&#x260E; Appele: ${h.numero}</div>`:""}
+    </div>`).join("");
+}
+
+function lineClass(m){
+  if(m.includes("[EmergencyAgent]"))return"emergency";
+  if(m.includes("[Coordinator]"))return"coordinator";
+  if(m.includes("[AmbulanceAgent]"))return"ambulance";
+  if(m.includes("[HospitalAgent]"))return"hospital";
+  if(m.includes("[DoctorAgent]"))return"doctor";
+  if(m.includes("[PoliceAgent]"))return"police";
+  if(m.includes("[FireBrigadeAgent]"))return"fire";
+  if(m.includes("[HelicopterAgent]"))return"helicopter";
+  if(m.includes("[BloodBankAgent]"))return"blood";
+  if(m.includes("[FamilyAgent]"))return"family";
+  return"sys";
+}
+
+function parseLog(m){
+  // Startup
+  if(m.includes("Demarrage")||m.includes("demarrage")){
+    const map={EmergencyAgent:"emergency",CoordinatorAgent:"coordinator",AmbulanceAgent:"ambulance",
+      HospitalAgent:"hospital",DoctorAgent:"doctor",PoliceAgent:"police",
+      FireBrigadeAgent:"firebrigade",HelicopterAgent:"helicopter",BloodBankAgent:"bloodbank",FamilyAgent:"family"};
+    for(const[n,id]of Object.entries(map))if(m.includes(n)){setAgent(id,"En ligne","on");break;}
+  }
+  // New call
+  const nc=m.match(/Nouvel appel.*?:\s*(CALL-\d+)/);
+  if(nc){stats.total++;document.getElementById("s-total").textContent=stats.total;addCall(nc[1],"...","...","...");setAgent("emergency","Appel entrant");animateStep(0);}
+  // Details
+  const tm=m.match(/Type:\s*(\S+)\s*\|\s*Severite:\s*(\w+)\s*\|\s*Lieu:\s*(.+)/i);
+  if(tm&&calls.length>0){calls[0].type=tm[1];calls[0].sev=tm[2];calls[0].loc=tm[3];if(history.length>0){history[0].type=tm[1];history[0].sev=tm[2];history[0].loc=tm[3];}renderCalls();renderHistory();}
+  // Numero appele
+  const num=m.match(/Numero appele:\s*(.+)/);
+  if(num&&history.length>0){updateCallData(history[0].id,"numero",num[1].trim());}
+  // CRITICAL
+  if(m.includes("CRITICAL")){stats.critical++;document.getElementById("s-critical").textContent=stats.critical;}
+  // Helicopter
+  if(m.includes("helicopt")||m.includes("Helicopt")){stats.heli++;document.getElementById("s-heli").textContent=stats.heli;setAgent("helicopter","En vol");}
+  // FSM
+  if(m.includes("IDLE"))updateFSM("IDLE");
+  if(m.includes("DISPATCHING")){updateFSM("DISPATCHING");setAgent("coordinator","Dispatch...");animateStep(2);}
+  if(m.includes("Ordre ambulance")){setAgent("ambulance","Dispatche");animateStep(2);}
+  if(m.includes("Ordre helicopt")){setAgent("helicopter","Dispatche");animateStep(2);}
+  if(m.includes("Dispatch confirm")||m.includes("DISPATCHED")){animateStep(4);}
+  if(m.includes("MEDICAL_RESPONSE")){updateFSM("MEDICAL_RESPONSE");setAgent("doctor","Diagnostic...");setAgent("bloodbank","Sang...");animateStep(6);setTimeout(()=>animateStep(8),600);}
+  if(m.includes("Diagnostic")){setAgent("doctor","Diagnostic OK");animateStep(6);}
+  if(m.includes("Groupe:")||m.includes("Sang confirm")){setAgent("bloodbank","Sang OK");animateStep(8);}
+  if(m.includes("SECURING")){updateFSM("SECURING");setAgent("police","Securisation...");setAgent("firebrigade","Intervention...");animateStep(10);}
+  if(m.includes("Zone s")||m.includes("securis")){setAgent("police","Zone OK");setAgent("firebrigade","Zone OK");}
+  if(m.includes("PREPARING")){updateFSM("PREPARING");setAgent("hospital","Preparation...");animateStep(12);}
+  // Hospital name
+  const hosp=m.match(/Hopital:\s*(.+?)\s*\(/);
+  if(hosp&&history.length>0){updateCallData(history[0].id,"hospital",hosp[1].trim());}
+  if(m.includes("RESOLVING")){updateFSM("RESOLVING");setAgent("family","Notification...");setAgent("emergency","Resolution...");animateStep(14);setTimeout(()=>animateStep(16),600);}
+  // Family contact
+  const fam=m.match(/Contact:\s*(.+?)\s*\|\s*Tel:\s*(.+)/);
+  if(fam&&history.length>0){updateCallData(history[0].id,"contact",fam[1].trim()+" "+fam[2].trim());}
+  // Resolution
+  if(m.includes("RESOLUTION RECUE")||m.includes("solution compl")){
+    const rm=m.match(/Appel (CALL-\d+)/)||m.match(/(CALL-\d+)/);
+    if(rm){stats.resolved++;document.getElementById("s-resolved").textContent=stats.resolved;resolveCall(rm[1]);}
+    setAgent("emergency","Resolu");animateStep(16);
+  }
+  if(m.includes("DISPATCHED")||m.includes("Dispatch CALL")){setAgent("ambulance","Confirme");animateStep(4);}
+}
+
+function appendLog(m){
+  const d=document.getElementById("logs");
+  const el=document.createElement("div");
+  el.className="ll "+lineClass(m);el.textContent=m;
+  d.appendChild(el);d.scrollTop=d.scrollHeight;
+  while(d.children.length>500)d.removeChild(d.firstChild);
+}
+
+function setStatus(s){
+  const b=document.getElementById("badge");
+  if(s==="running"){b.textContent="En cours";b.className="running";}
+  else{b.textContent="Arrete";b.className="stopped";}
+}
+
+function connectSSE(){
+  if(es)es.close();
+  es=new EventSource("/api/stream");
+  es.onmessage=e=>{
+    const msg=JSON.parse(e.data);
+    if(msg==="__PING__")return;
+    if(msg==="__STATUS__:running"){setStatus("running");return;}
+    if(msg==="__STATUS__:stopped"){setStatus("stopped");return;}
+    appendLog(msg);parseLog(msg);
+  };
+  es.onerror=()=>setTimeout(connectSSE,3000);
+}
+
+async function startSim(){
+  const r=await fetch("/api/start",{method:"POST"});
+  const d=await r.json();
+  appendLog(d.status==="already_running"?"[Systeme] Deja en cours.":"[Systeme] Demarrage simulation...");
+  if(d.status!=="already_running")setStatus("running");
+}
+async function stopSim(){await fetch("/api/stop",{method:"POST"});appendLog("[Systeme] Arret demande.");setStatus("stopped");}
+function clearLogs(){document.getElementById("logs").innerHTML="";}
+
+connectSSE();
+fetch("/api/status").then(r=>r.json()).then(d=>{if(d.running)setStatus("running");});
+</script>
+</body>
+</html>
